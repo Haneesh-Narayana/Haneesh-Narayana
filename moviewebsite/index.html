@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Movies Database</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <header>
+    <h1>Movies Database</h1>
+    <div id="search-container">
+      <input type="text" id="search-input" placeholder="Search movies">
+      <button id="search-button">Search</button>
+    </div>
+  </header>
+  <div id="movies-container">
+    <!-- Movie cards will be dynamically added here -->
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="script.js"></script>
+
+  <script>
+    // Function to create a movie card
+    function createMovieCard(movie) {
+      const movieCard = document.createElement('div');
+      movieCard.classList.add('movie-card');
+
+      const title = document.createElement('h2');
+      title.textContent = movie.title;
+
+      const genre = document.createElement('p');
+      genre.textContent = `Genre: ${movie.genre}`;
+
+      const year = document.createElement('p');
+      year.textContent = `Year: ${movie.year}`;
+
+      const image = document.createElement('img');
+      image.src = movie.imageUrl;
+      image.alt = movie.title;
+
+      movieCard.appendChild(title);
+      movieCard.appendChild(genre);
+      movieCard.appendChild(year);
+      movieCard.appendChild(image);
+
+      return movieCard;
+    }
+
+    $(document).ready(function() {
+      const moviesContainer = document.getElementById('movies-container');
+      const searchInput = document.getElementById('search-input');
+      const searchButton = document.getElementById('search-button');
+      const apiKey = 'f22b478f';
+
+      // Function to clear existing movie cards
+      function clearMovies() {
+        while (moviesContainer.firstChild) {
+          moviesContainer.removeChild(moviesContainer.firstChild);
+        }
+      }
+
+      // Fetch movie data from the OMDB API based on search query
+      function fetchMovies(searchQuery) {
+        $.ajax({
+          url: `https://www.omdbapi.com/?s=${searchQuery}&apikey=${apiKey}`,
+          method: 'GET',
+          success: function (response) {
+            const movies = response.Search;
+
+            // Create movie cards and append them to the movies container
+            movies.forEach(movie => {
+              const imdbID = movie.imdbID;
+
+              // Fetch additional details for each movie
+              $.ajax({
+                url: `https://www.omdbapi.com/?i=${imdbID}&apikey=${apiKey}`,
+                method: 'GET',
+                success: function (response) {
+                  const movieData = {
+                    title: response.Title,
+                    genre: response.Genre,
+                    year: response.Year,
+                    imageUrl: response.Poster
+                  };
+
+                  const movieCard = createMovieCard(movieData);
+                  moviesContainer.appendChild(movieCard);
+                }
+              });
+            });
+          }
+        });
+      }
+
+      // Event listener for search button click
+      searchButton.addEventListener('click', function() {
+        const searchQuery = searchInput.value.trim();
+        if (searchQuery !== '') {
+          clearMovies();
+          fetchMovies(searchQuery);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
